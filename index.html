@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lost and Found Items</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+    }
+
+    .form-container {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-weight: bold;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 0.6rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 0.6rem 1.2rem;
+      background-color: #3498db;
+      border: none;
+      color: white;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    .filters {
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .filters button {
+      margin: 0 0.5rem;
+      background-color: #ecf0f1;
+      color: #2c3e50;
+    }
+
+    .filters button.active {
+      background-color: #3498db;
+      color: white;
+    }
+
+    .item-list {
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .item-card {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      border-left: 6px solid;
+    }
+
+    .item-card.lost {
+      border-color: #e74c3c;
+    }
+
+    .item-card.found {
+      border-color: #2ecc71;
+    }
+
+    .item-card h3 {
+      margin: 0 0 0.4rem 0;
+    }
+
+    .item-card p {
+      margin: 0.2rem 0;
+    }
+
+    .no-items {
+      text-align: center;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Lost and Found Items</h1>
+
+  <div class="form-container">
+    <form id="itemForm">
+      <div class="form-group">
+        <label for="type">Type:</label>
+        <select id="type" required>
+          <option value="">-- Select --</option>
+          <option value="lost">Lost</option>
+          <option value="found">Found</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="itemName">Item Name:</label>
+        <input type="text" id="itemName" required />
+      </div>
+      <div class="form-group">
+        <label for="description">Description:</label>
+        <textarea id="description" rows="3" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="location">Location:</label>
+        <input type="text" id="location" required />
+      </div>
+      <button type="submit">Add Item</button>
+    </form>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="lost">Lost</button>
+    <button class="filter-btn" data-filter="found">Found</button>
+  </div>
+
+  <div class="item-list" id="itemList">
+    <!-- Items will appear here -->
+  </div>
+
+  <script>
+    const itemForm = document.getElementById('itemForm');
+    const itemList = document.getElementById('itemList');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+
+    let items = [];
+
+    itemForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const type = document.getElementById('type').value;
+      const itemName = document.getElementById('itemName').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const location = document.getElementById('location').value.trim();
+
+      if (type && itemName && description && location) {
+        const newItem = {
+          type,
+          itemName,
+          description,
+          location,
+          timestamp: new Date().toLocaleString()
+        };
+
+        items.unshift(newItem); // Add to beginning
+        renderItems();
+        itemForm.reset();
+      }
+    });
+
+    function renderItems(filter = 'all') {
+      itemList.innerHTML = '';
+
+      const filteredItems = filter === 'all' ? items : items.filter(item => item.type === filter);
+
+      if (filteredItems.length === 0) {
+        itemList.innerHTML = `<p class="no-items">No items to display.</p>`;
+        return;
+      }
+
+      filteredItems.forEach(item => {
+        const card = document.createElement('div');
+        card.className = `item-card ${item.type}`;
+        card.innerHTML = `
+          <h3>${item.itemName}</h3>
+          <p><strong>Type:</strong> ${capitalize(item.type)}</p>
+          <p><strong>Description:</strong> ${item.description}</p>
+          <p><strong>Location:</strong> ${item.location}</p>
+          <p><small><strong>Reported:</strong> ${item.timestamp}</small></p>
+        `;
+        itemList.appendChild(card);
+      });
+    }
+
+    function capitalize(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    // Filter Buttons
+    filterButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        filterButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        const filter = button.getAttribute('data-filter');
+        renderItems(filter);
+      });
+    });
+
+    // Initial render
+    renderItems();
+  </script>
+
+</body>
+</html>
